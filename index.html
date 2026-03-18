@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ClipNotes</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0e0e0f;
+  --surface:#18181b;
+  --surface2:#222226;
+  --border:#2e2e34;
+  --ink:#f0ede8;
+  --muted:#6b6b72;
+  --accent:#e8c547;
+  --accent2:#c47d3a;
+  --red:#e05252;
+  --green:#4caf7d;
+  --blue:#5b9cf6;
+  --radius:10px;
+  --shadow:0 4px 24px rgba(0,0,0,0.4);
+}
+body{background:var(--bg);color:var(--ink);font-family:'Geist Mono',monospace;min-height:100vh;overflow-x:hidden;}
+input,textarea,button{font-family:inherit;}
+
+/* ── SCREENS ── */
+.screen{display:none;min-height:100vh;}
+.screen.active{display:flex;}
+
+/* ══════════════════════════════
+   AUTH SCREEN
+══════════════════════════════ */
+#authScreen{
+  align-items:center;justify-content:center;
+  background:var(--bg);
+  background-image:radial-gradient(ellipse at 20% 50%,rgba(232,197,71,0.06) 0%,transparent 60%),
+                   radial-gradient(ellipse at 80% 20%,rgba(91,156,246,0.05) 0%,transparent 50%);
+}
+.auth-box{
+  width:100%;max-width:420px;padding:20px;
+}
+.auth-logo{
+  font-family:'Instrument Serif',serif;
+  font-size:2.8rem;
+  color:var(--ink);
+  margin-bottom:6px;
+  letter-spacing:-1px;
+}
+.auth-logo span{color:var(--accent);font-style:italic;}
+.auth-sub{font-size:0.72rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:40px;}
+.auth-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:32px;
+  box-shadow:var(--shadow);
+}
+.auth-tabs{display:flex;gap:0;margin-bottom:28px;border-bottom:1px solid var(--border);}
+.auth-tab{
+  flex:1;padding:10px;background:none;border:none;
+  color:var(--muted);font-size:0.8rem;letter-spacing:0.08em;
+  text-transform:uppercase;cursor:pointer;
+  border-bottom:2px solid transparent;margin-bottom:-1px;
+  transition:all 0.2s;
+}
+.auth-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.form-group{margin-bottom:18px;}
+.form-label{font-size:0.7rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;display:block;margin-bottom:7px;}
+.form-input{
+  width:100%;background:var(--surface2);border:1px solid var(--border);
+  border-radius:6px;padding:11px 14px;color:var(--ink);
+  font-size:0.88rem;outline:none;transition:border-color 0.2s;
+}
+.form-input:focus{border-color:var(--accent);}
+.form-input::placeholder{color:var(--muted);}
+.btn-primary{
+  width:100%;padding:12px;background:var(--accent);color:#0e0e0f;
+  border:none;border-radius:6px;font-size:0.85rem;font-weight:500;
+  letter-spacing:0.05em;cursor:pointer;transition:opacity 0.2s;margin-top:4px;
+}
+.btn-primary:hover{opacity:0.88;}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed;}
+.divider{display:flex;align-items:center;gap:12px;margin:20px 0;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+.divider span{font-size:0.7rem;color:var(--muted);}
+.btn-google{
+  width:100%;padding:11px;background:var(--surface2);
+  border:1px solid var(--border);border-radius:6px;
+  color:var(--ink);font-size:0.85rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  transition:border-color 0.2s,background 0.2s;
+}
+.btn-google:hover{border-color:var(--muted);background:var(--border);}
+.google-icon{width:18px;height:18px;}
+.auth-error{
+  background:rgba(224,82,82,0.12);border:1px solid rgba(224,82,82,0.3);
+  border-radius:6px;padding:10px 14px;font-size:0.78rem;
+  color:var(--red);margin-top:14px;display:none;
+}
+.auth-error.show{display:block;}
+
+/* ══════════════════════════════
+   DASHBOARD SCREEN
+══════════════════════════════ */
+#dashScreen{flex-direction:column;}
+
+/* Header */
+.header{
+  display:flex;align-items:center;gap:16px;
+  padding:18px 28px;border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:50;
+  background:rgba(14,14,15,0.92);backdrop-filter:blur(12px);
+}
+.header-logo{
+  font-family:'Instrument Serif',serif;font-size:1.6rem;
+  color:var(--ink);letter-spacing:-0.5px;
+}
+.header-logo span{color:var(--accent);font-style:italic;}
+.header-search{
+  flex:1;max-width:340px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:6px;padding:8px 14px;color:var(--ink);
+  font-size:0.82rem;outline:none;transition:border-color 0.2s;
+}
+.header-search:focus{border-color:var(--accent);}
+.header-search::placeholder{color:var(--muted);}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:12px;}
+.user-avatar{
+  width:34px;height:34px;border-radius:50%;
+  background:var(--accent);color:#0e0e0f;
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.8rem;font-weight:500;cursor:pointer;
+  border:2px solid transparent;transition:border-color 0.2s;
+  overflow:hidden;
+}
+.user-avatar:hover{border-color:var(--accent);}
+.user-avatar img{width:100%;height:100%;object-fit:cover;}
+.btn-logout{
+  background:none;border:1px solid var(--border);border-radius:6px;
+  padding:6px 14px;color:var(--muted);font-size:0.75rem;
+  cursor:pointer;letter-spacing:0.05em;transition:all 0.2s;
+}
+.btn-logout:hover{border-color:var(--red);color:var(--red);}
+
+/* Filter bar */
+.filter-bar{
+  display:flex;align-items:center;gap:8px;
+  padding:14px 28px;border-bottom:1px solid var(--border);
+  overflow-x:auto;
+}
+.filter-btn{
+  background:none;border:1px solid var(--border);border-radius:20px;
+  padding:5px 14px;color:var(--muted);font-size:0.73rem;
+  letter-spacing:0.06em;cursor:pointer;white-space:nowrap;
+  transition:all 0.2s;
+}
+.filter-btn.active,.filter-btn:hover{
+  background:var(--accent);border-color:var(--accent);color:#0e0e0f;
+}
+
+/* Notes grid */
+.notes-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:16px;padding:24px 28px;
+  flex:1;align-content:start;
+}
+.empty-state{
+  grid-column:1/-1;
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:80px 20px;gap:12px;
+  color:var(--muted);
+}
+.empty-state .empty-icon{font-size:3rem;opacity:0.4;}
+.empty-state p{font-size:0.82rem;letter-spacing:0.05em;}
+
+/* Note Card */
+.note-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:18px;cursor:pointer;
+  transition:transform 0.15s,border-color 0.15s,box-shadow 0.15s;
+  animation:cardIn 0.25s ease both;position:relative;
+  display:flex;flex-direction:column;gap:10px;
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.note-card:hover{transform:translateY(-2px);border-color:var(--muted);box-shadow:var(--shadow);}
+.note-card-type{
+  font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--muted);display:flex;align-items:center;gap:6px;
+}
+.type-dot{width:6px;height:6px;border-radius:50%;}
+.type-dot.note{background:var(--blue);}
+.type-dot.list{background:var(--green);}
+.note-card-title{
+  font-family:'Instrument Serif',serif;font-size:1.15rem;
+  color:var(--ink);line-height:1.3;word-break:break-word;
+}
+.note-card-preview{
+  font-size:0.78rem;color:var(--muted);line-height:1.6;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;
+  overflow:hidden;word-break:break-word;
+}
+.note-card-footer{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:auto;padding-top:10px;border-top:1px solid var(--border);
+}
+.note-card-date{font-size:0.68rem;color:var(--muted);}
+.note-card-actions{display:flex;gap:6px;opacity:0;transition:opacity 0.15s;}
+.note-card:hover .note-card-actions{opacity:1;}
+.card-action-btn{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:5px;padding:4px 8px;color:var(--muted);
+  font-size:0.7rem;cursor:pointer;transition:all 0.15s;
+}
+.card-action-btn:hover{color:var(--ink);border-color:var(--muted);}
+.card-action-btn.del:hover{color:var(--red);border-color:var(--red);}
+.list-preview{display:flex;flex-direction:column;gap:4px;}
+.list-preview-item{
+  display:flex;align-items:center;gap:7px;
+  font-size:0.76rem;color:var(--muted);
+}
+.list-preview-item.done{text-decoration:line-through;opacity:0.5;}
+.mini-check{
+  width:12px;height:12px;border-radius:3px;border:1px solid var(--border);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+}
+.mini-check.checked{background:var(--green);border-color:var(--green);}
+.progress-ring{font-size:0.68rem;color:var(--green);}
+
+/* FAB */
+.fab{
+  position:fixed;bottom:32px;right:32px;
+  width:54px;height:54px;border-radius:50%;
+  background:var(--accent);color:#0e0e0f;
+  border:none;font-size:1.6rem;cursor:pointer;
+  box-shadow:0 4px 20px rgba(232,197,71,0.35);
+  display:flex;align-items:center;justify-content:center;
+  transition:transform 0.2s,box-shadow 0.2s;z-index:40;
+}
+.fab:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(232,197,71,0.45);}
+
+/* ══════════════════════════════
+   EDITOR SCREEN
+══════════════════════════════ */
+#editorScreen{flex-direction:column;}
+.editor-header{
+  display:flex;align-items:center;gap:14px;
+  padding:16px 28px;border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:50;
+  background:rgba(14,14,15,0.95);backdrop-filter:blur(12px);
+}
+.btn-back{
+  background:none;border:1px solid var(--border);border-radius:6px;
+  padding:7px 14px;color:var(--muted);font-size:0.78rem;
+  cursor:pointer;transition:all 0.2s;letter-spacing:0.05em;
+}
+.btn-back:hover{border-color:var(--ink);color:var(--ink);}
+.editor-type-badge{
+  font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;
+  padding:4px 10px;border-radius:20px;border:1px solid;
+}
+.editor-type-badge.note{color:var(--blue);border-color:rgba(91,156,246,0.3);}
+.editor-type-badge.list{color:var(--green);border-color:rgba(76,175,125,0.3);}
+.editor-actions{margin-left:auto;display:flex;gap:8px;align-items:center;}
+.save-status{font-size:0.7rem;color:var(--muted);letter-spacing:0.05em;}
+.btn-share{
+  background:none;border:1px solid var(--border);border-radius:6px;
+  padding:7px 14px;color:var(--muted);font-size:0.78rem;
+  cursor:pointer;transition:all 0.2s;
+}
+.btn-share:hover{border-color:var(--accent);color:var(--accent);}
+.btn-save{
+  background:var(--accent);color:#0e0e0f;border:none;
+  border-radius:6px;padding:7px 18px;font-size:0.78rem;
+  font-weight:500;cursor:pointer;transition:opacity 0.2s;
+}
+.btn-save:hover{opacity:0.85;}
+
+/* Editor body */
+.editor-body{flex:1;padding:32px 28px;max-width:780px;width:100%;margin:0 auto;}
+.editor-title{
+  font-family:'Instrument Serif',serif;font-size:2.2rem;
+  color:var(--ink);background:transparent;border:none;outline:none;
+  width:100%;margin-bottom:24px;line-height:1.2;letter-spacing:-0.5px;
+  resize:none;
+}
+.editor-title::placeholder{color:var(--muted);}
+
+/* Simple note textarea */
+.editor-textarea{
+  width:100%;background:transparent;border:none;outline:none;
+  color:var(--ink);font-size:0.92rem;line-height:1.9;
+  resize:none;min-height:400px;
+}
+.editor-textarea::placeholder{color:var(--muted);}
+
+/* List editor */
+.list-editor{display:flex;flex-direction:column;gap:4px;}
+.list-item-row{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:8px 10px;border-radius:7px;
+  transition:background 0.15s;animation:itemIn 0.2s ease both;
+  group:true;
+}
+@keyframes itemIn{from{opacity:0;transform:translateX(-6px);}to{opacity:1;transform:translateX(0);}}
+.list-item-row:hover{background:var(--surface2);}
+.list-item-row.is-checked{background:rgba(76,175,125,0.05);}
+
+/* checkbox */
+.cb-wrap{position:relative;flex-shrink:0;width:20px;height:20px;margin-top:2px;}
+.cb-wrap input{position:absolute;opacity:0;width:100%;height:100%;cursor:pointer;z-index:2;margin:0;}
+.cb-box{
+  width:20px;height:20px;border:1.5px solid var(--border);
+  border-radius:4px;background:var(--surface2);
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.18s;pointer-events:none;
+}
+.cb-wrap input:checked~.cb-box{background:var(--green);border-color:var(--green);}
+.cb-box svg{opacity:0;transform:scale(0.3);transition:all 0.18s;}
+.cb-wrap input:checked~.cb-box svg{opacity:1;transform:scale(1);}
+
+.list-item-text{
+  flex:1;background:transparent;border:none;outline:none;
+  color:var(--ink);font-size:0.9rem;line-height:1.6;
+  font-family:'Geist Mono',monospace;resize:none;
+  min-height:24px;padding-top:1px;
+}
+.list-item-text::placeholder{color:var(--muted);}
+.list-item-text.struck{text-decoration:line-through;color:var(--muted);}
+.btn-del-item{
+  background:none;border:none;color:var(--muted);
+  cursor:pointer;font-size:1rem;padding:2px 4px;
+  opacity:0;transition:opacity 0.15s,color 0.15s;line-height:1;
+  flex-shrink:0;margin-top:2px;
+}
+.list-item-row:hover .btn-del-item{opacity:1;}
+.btn-del-item:hover{color:var(--red);}
+
+.add-list-item{
+  display:flex;align-items:center;gap:12px;
+  padding:8px 10px;margin-top:8px;
+  border:1px dashed var(--border);border-radius:7px;
+  cursor:pointer;transition:border-color 0.15s,background 0.15s;
+}
+.add-list-item:hover{border-color:var(--accent);background:rgba(232,197,71,0.04);}
+.add-list-item input{
+  flex:1;background:transparent;border:none;outline:none;
+  color:var(--ink);font-size:0.88rem;font-family:'Geist Mono',monospace;
+}
+.add-list-item input::placeholder{color:var(--muted);}
+.add-list-item .plus{color:var(--accent);font-size:1.1rem;flex-shrink:0;}
+
+/* ══════════════════════════════
+   TYPE PICKER MODAL
+══════════════════════════════ */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.7);
+  display:none;align-items:center;justify-content:center;
+  z-index:100;backdrop-filter:blur(4px);
+}
+.modal-overlay.open{display:flex;}
+.modal{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:32px;max-width:420px;width:90%;
+  box-shadow:var(--shadow);animation:modalIn 0.2s ease;
+}
+@keyframes modalIn{from{opacity:0;transform:scale(0.95);}to{opacity:1;transform:scale(1);}}
+.modal-title{
+  font-family:'Instrument Serif',serif;font-size:1.5rem;
+  margin-bottom:6px;color:var(--ink);
+}
+.modal-sub{font-size:0.75rem;color:var(--muted);margin-bottom:24px;letter-spacing:0.04em;}
+.type-options{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.type-option{
+  background:var(--surface2);border:1.5px solid var(--border);
+  border-radius:8px;padding:20px 16px;cursor:pointer;
+  transition:all 0.18s;text-align:left;
+}
+.type-option:hover.note-opt{border-color:var(--blue);background:rgba(91,156,246,0.06);}
+.type-option:hover.list-opt{border-color:var(--green);background:rgba(76,175,125,0.06);}
+.type-option-icon{font-size:1.6rem;margin-bottom:10px;}
+.type-option-name{font-size:0.85rem;color:var(--ink);margin-bottom:4px;}
+.type-option-desc{font-size:0.7rem;color:var(--muted);line-height:1.4;}
+
+/* ══════════════════════════════
+   SHARE MODAL
+══════════════════════════════ */
+.share-modal{max-width:380px;}
+.share-options{display:flex;flex-direction:column;gap:8px;margin-top:4px;}
+.share-btn{
+  display:flex;align-items:center;gap:12px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:7px;padding:13px 16px;cursor:pointer;
+  transition:all 0.15s;color:var(--ink);font-size:0.84rem;
+}
+.share-btn:hover{border-color:var(--muted);}
+.share-btn .share-icon{font-size:1.2rem;width:24px;text-align:center;}
+.share-btn.whatsapp:hover{border-color:#25d366;color:#25d366;}
+.share-btn.gmail:hover{border-color:#ea4335;color:#ea4335;}
+.share-btn.copy:hover{border-color:var(--accent);color:var(--accent);}
+.share-btn.native:hover{border-color:var(--blue);color:var(--blue);}
+.modal-close{
+  position:absolute;top:16px;right:16px;
+  background:none;border:none;color:var(--muted);
+  font-size:1.2rem;cursor:pointer;padding:4px 8px;
+  border-radius:4px;transition:color 0.15s;
+}
+.modal-close:hover{color:var(--ink);}
+.modal{position:relative;}
+
+/* ══════════════════════════════
+   DELETE CONFIRM
+══════════════════════════════ */
+.confirm-modal{max-width:360px;}
+.confirm-text{font-size:0.82rem;color:var(--muted);margin-bottom:24px;line-height:1.6;}
+.confirm-actions{display:flex;gap:10px;justify-content:flex-end;}
+.btn-cancel{
+  background:none;border:1px solid var(--border);border-radius:6px;
+  padding:8px 18px;color:var(--muted);font-size:0.8rem;cursor:pointer;
+  transition:all 0.15s;
+}
+.btn-cancel:hover{border-color:var(--muted);color:var(--ink);}
+.btn-delete-confirm{
+  background:var(--red);border:none;border-radius:6px;
+  padding:8px 18px;color:#fff;font-size:0.8rem;cursor:pointer;
+  transition:opacity 0.15s;
+}
+.btn-delete-confirm:hover{opacity:0.85;}
+
+/* ══════════════════════════════
+   TOAST
+══════════════════════════════ */
+.toast{
+  position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:7px;padding:10px 20px;font-size:0.8rem;
+  color:var(--ink);opacity:0;transition:all 0.3s;z-index:200;
+  pointer-events:none;letter-spacing:0.04em;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ══════════════════════════════
+   LOADING
+══════════════════════════════ */
+.loader{
+  position:fixed;inset:0;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  z-index:300;flex-direction:column;gap:16px;
+}
+.loader-logo{
+  font-family:'Instrument Serif',serif;font-size:2rem;
+  color:var(--ink);letter-spacing:-0.5px;
+}
+.loader-logo span{color:var(--accent);font-style:italic;}
+.spinner{
+  width:28px;height:28px;border:2px solid var(--border);
+  border-top-color:var(--accent);border-radius:50%;
+  animation:spin 0.7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+@media(max-width:600px){
+  .header{padding:14px 16px;}
+  .filter-bar{padding:12px 16px;}
+  .notes-grid{padding:16px;grid-template-columns:1fr;}
+  .editor-body{padding:24px 16px;}
+  .editor-title{font-size:1.7rem;}
+  .fab{bottom:24px;right:20px;}
+  .note-card-actions{opacity:1;}
+}
+</style>
+</head>
+<body>
+
+<!-- Loader -->
+<div class="loader" id="loader">
+  <div class="loader-logo">Clip<span>Notes</span></div>
+  <div class="spinner"></div>
+</div>
+
+<!-- Auth Screen -->
+<div class="screen" id="authScreen">
+  <div class="auth-box">
+    <div class="auth-logo">Clip<span>Notes</span></div>
+    <div class="auth-sub">your thoughts, anywhere</div>
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Login</button>
+        <button class="auth-tab" id="tabSignup" onclick="switchTab('signup')">Sign Up</button>
+      </div>
+      <div id="loginForm">
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" type="email" id="loginEmail" placeholder="you@example.com"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input class="form-input" type="password" id="loginPassword" placeholder="••••••••"
+            onkeydown="if(event.key==='Enter')handleEmailAuth('login')"/>
+        </div>
+        <button class="btn-primary" id="btnLogin" onclick="handleEmailAuth('login')">Login</button>
+      </div>
+      <div id="signupForm" style="display:none;">
+        <div class="form-group">
+          <label class="form-label">Name</label>
+          <input class="form-input" type="text" id="signupName" placeholder="Your name"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" type="email" id="signupEmail" placeholder="you@example.com"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input class="form-input" type="password" id="signupPassword" placeholder="min 6 characters"
+            onkeydown="if(event.key==='Enter')handleEmailAuth('signup')"/>
+        </div>
+        <button class="btn-primary" id="btnSignup" onclick="handleEmailAuth('signup')">Create Account</button>
+      </div>
+      <div class="divider"><span>or</span></div>
+      <button class="btn-google" onclick="handleGoogleAuth()">
+        <svg class="google-icon" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        Continue with Google
+      </button>
+      <div class="auth-error" id="authError"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Dashboard Screen -->
+<div class="screen" id="dashScreen">
+  <div class="header">
+    <div class="header-logo">Clip<span>Notes</span></div>
+    <input class="header-search" type="text" placeholder="search notes..." id="searchInput" oninput="filterNotes()"/>
+    <div class="header-right">
+      <div class="user-avatar" id="userAvatar"></div>
+      <button class="btn-logout" onclick="handleLogout()">logout</button>
+    </div>
+  </div>
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+    <button class="filter-btn" onclick="setFilter('note',this)">Notes</button>
+    <button class="filter-btn" onclick="setFilter('list',this)">Lists</button>
+  </div>
+  <div class="notes-grid" id="notesGrid"></div>
+  <button class="fab" onclick="openTypePicker()" title="New note">+</button>
+</div>
+
+<!-- Editor Screen -->
+<div class="screen" id="editorScreen">
+  <div class="editor-header">
+    <button class="btn-back" onclick="goBack()">← back</button>
+    <span class="editor-type-badge" id="editorTypeBadge"></span>
+    <div class="editor-actions">
+      <span class="save-status" id="saveStatus"></span>
+      <button class="btn-share" onclick="openShareModal()">share ↗</button>
+      <button class="btn-save" onclick="saveNote()">save</button>
+    </div>
+  </div>
+  <div class="editor-body">
+    <textarea class="editor-title" id="editorTitle" placeholder="Title" rows="1"
+      oninput="autoResize(this)"></textarea>
+    <div id="editorContent"></div>
+  </div>
+</div>
+
+<!-- Type Picker Modal -->
+<div class="modal-overlay" id="typePickerModal" onclick="closeModal('typePickerModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal('typePickerModal')">×</button>
+    <div class="modal-title">New Note</div>
+    <div class="modal-sub">choose a note type</div>
+    <div class="type-options">
+      <button class="type-option note-opt" onclick="createNote('note')">
+        <div class="type-option-icon">📝</div>
+        <div class="type-option-name">Simple Note</div>
+        <div class="type-option-desc">Freeform text, thoughts, ideas</div>
+      </button>
+      <button class="type-option list-opt" onclick="createNote('list')">
+        <div class="type-option-icon">✅</div>
+        <div class="type-option-name">List</div>
+        <div class="type-option-desc">Checkboxes with strikethrough</div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Share Modal -->
+<div class="modal-overlay" id="shareModal" onclick="closeModal('shareModal')">
+  <div class="modal share-modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal('shareModal')">×</button>
+    <div class="modal-title">Share Note</div>
+    <div class="modal-sub">choose how to share</div>
+    <div class="share-options">
+      <button class="share-btn whatsapp" onclick="shareVia('whatsapp')">
+        <span class="share-icon">💬</span> WhatsApp
+      </button>
+      <button class="share-btn gmail" onclick="shareVia('gmail')">
+        <span class="share-icon">✉️</span> Gmail
+      </button>
+      <button class="share-btn copy" onclick="shareVia('copy')">
+        <span class="share-icon">🔗</span> Copy as text
+      </button>
+      <button class="share-btn native" onclick="shareVia('native')" id="nativeShareBtn">
+        <span class="share-icon">↗</span> Share via...
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal-overlay" id="deleteModal" onclick="closeModal('deleteModal')">
+  <div class="modal confirm-modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal('deleteModal')">×</button>
+    <div class="modal-title">Delete Note?</div>
+    <div class="confirm-text">This action cannot be undone. The note will be permanently deleted.</div>
+    <div class="confirm-actions">
+      <button class="btn-cancel" onclick="closeModal('deleteModal')">Cancel</button>
+      <button class="btn-delete-confirm" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getAuth, onAuthStateChanged, signInWithEmailAndPassword,
+  createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider,
+  signOut, updateProfile
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
+  onSnapshot, query, orderBy, serverTimestamp, getDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// ── Firebase Init ──
+const firebaseConfig = {
+  apiKey: "AIzaSyBJFqKb-seCuZEXAbnvfe8T_TpqGETfQ5c",
+  authDomain: "my-note-app-97cb2.firebaseapp.com",
+  projectId: "my-note-app-97cb2",
+  storageBucket: "my-note-app-97cb2.firebasestorage.app",
+  messagingSenderId: "284274114699",
+  appId: "1:284274114699:web:713e3da77f8aae48c0548e"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const googleProvider = new GoogleAuthProvider();
+
+// ── State ──
+let currentUser = null;
+let notes = [];
+let currentNote = null;
+let currentFilter = 'all';
+let notesUnsub = null;
+let deleteTargetId = null;
+let autoSaveTimer = null;
+
+// ── Auth State ──
+onAuthStateChanged(auth, user => {
+  document.getElementById('loader').style.display = 'none';
+  if (user) {
+    currentUser = user;
+    showScreen('dashScreen');
+    renderUserAvatar();
+    subscribeNotes();
+  } else {
+    currentUser = null;
+    if (notesUnsub) { notesUnsub(); notesUnsub = null; }
+    showScreen('authScreen');
+  }
+});
+
+// ── Screens ──
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+window.showScreen = showScreen;
+
+// ── Auth ──
+window.switchTab = (tab) => {
+  document.getElementById('tabLogin').classList.toggle('active', tab==='login');
+  document.getElementById('tabSignup').classList.toggle('active', tab==='signup');
+  document.getElementById('loginForm').style.display = tab==='login' ? 'block' : 'none';
+  document.getElementById('signupForm').style.display = tab==='signup' ? 'block' : 'none';
+  document.getElementById('authError').classList.remove('show');
+};
+
+window.handleEmailAuth = async (mode) => {
+  const errEl = document.getElementById('authError');
+  errEl.classList.remove('show');
+  try {
+    if (mode === 'login') {
+      const email = document.getElementById('loginEmail').value.trim();
+      const pass = document.getElementById('loginPassword').value;
+      document.getElementById('btnLogin').disabled = true;
+      await signInWithEmailAndPassword(auth, email, pass);
+    } else {
+      const name = document.getElementById('signupName').value.trim();
+      const email = document.getElementById('signupEmail').value.trim();
+      const pass = document.getElementById('signupPassword').value;
+      document.getElementById('btnSignup').disabled = true;
+      const cred = await createUserWithEmailAndPassword(auth, email, pass);
+      if (name) await updateProfile(cred.user, { displayName: name });
+    }
+  } catch(e) {
+    errEl.textContent = friendlyError(e.code);
+    errEl.classList.add('show');
+    document.getElementById(mode==='login'?'btnLogin':'btnSignup').disabled = false;
+  }
+};
+
+window.handleGoogleAuth = async () => {
+  try {
+    await signInWithPopup(auth, googleProvider);
+  } catch(e) {
+    const errEl = document.getElementById('authError');
+    errEl.textContent = friendlyError(e.code);
+    errEl.classList.add('show');
+  }
+};
+
+window.handleLogout = async () => {
+  await signOut(auth);
+};
+
+function friendlyError(code) {
+  const map = {
+    'auth/invalid-email': 'Invalid email address.',
+    'auth/user-not-found': 'No account found with this email.',
+    'auth/wrong-password': 'Incorrect password.',
+    'auth/email-already-in-use': 'Email already in use. Try logging in.',
+    'auth/weak-password': 'Password must be at least 6 characters.',
+    'auth/too-many-requests': 'Too many attempts. Try again later.',
+    'auth/popup-closed-by-user': 'Sign-in popup was closed.',
+    'auth/invalid-credential': 'Invalid email or password.',
+  };
+  return map[code] || 'Something went wrong. Please try again.';
+}
+
+// ── User Avatar ──
+function renderUserAvatar() {
+  const av = document.getElementById('userAvatar');
+  if (currentUser.photoURL) {
+    av.innerHTML = `<img src="${currentUser.photoURL}" alt="avatar"/>`;
+  } else {
+    const initial = (currentUser.displayName || currentUser.email || 'U')[0].toUpperCase();
+    av.textContent = initial;
+  }
+}
+
+// ── Firestore Notes ──
+function notesRef() {
+  return collection(db, 'users', currentUser.uid, 'notes');
+}
+
+function subscribeNotes() {
+  if (notesUnsub) notesUnsub();
+  const q = query(notesRef(), orderBy('updatedAt', 'desc'));
+  notesUnsub = onSnapshot(q, snap => {
+    notes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderNotes();
+  });
+}
+
+// ── Notes Render ──
+function renderNotes() {
+  const grid = document.getElementById('notesGrid');
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  let filtered = notes.filter(n => {
+    if (currentFilter !== 'all' && n.type !== currentFilter) return false;
+    if (search) {
+      const inTitle = (n.title||'').toLowerCase().includes(search);
+      const inBody = (n.body||'').toLowerCase().includes(search);
+      const inItems = (n.items||[]).some(i => i.text.toLowerCase().includes(search));
+      return inTitle || inBody || inItems;
+    }
+    return true;
+  });
+
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">🗒️</div>
+      <p>${search ? 'no notes match your search' : 'no notes yet — hit + to create one'}</p>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = '';
+  filtered.forEach(note => {
+    const card = document.createElement('div');
+    card.className = 'note-card';
+    const date = note.updatedAt?.toDate ? fmtDate(note.updatedAt.toDate()) : '';
+
+    let previewHTML = '';
+    if (note.type === 'list' && note.items?.length) {
+      const checked = note.items.filter(i=>i.checked).length;
+      const pct = Math.round(checked/note.items.length*100);
+      previewHTML = `
+        <div class="list-preview">
+          ${note.items.slice(0,4).map(i=>`
+            <div class="list-preview-item ${i.checked?'done':''}">
+              <div class="mini-check ${i.checked?'checked':''}">
+                ${i.checked?`<svg width="8" height="6" viewBox="0 0 8 6"><path d="M1 3L3 5L7 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`:''}
+              </div>
+              ${escHtml(i.text)}
+            </div>`).join('')}
+        </div>
+        <div class="progress-ring">${checked}/${note.items.length} done</div>`;
+    } else {
+      previewHTML = `<div class="note-card-preview">${escHtml(note.body||'').replace(/\n/g,'<br/>')}</div>`;
+    }
+
+    card.innerHTML = `
+      <div class="note-card-type">
+        <div class="type-dot ${note.type}"></div>
+        ${note.type === 'list' ? 'List' : 'Note'}
+      </div>
+      <div class="note-card-title">${escHtml(note.title||'Untitled')}</div>
+      ${previewHTML}
+      <div class="note-card-footer">
+        <span class="note-card-date">${date}</span>
+        <div class="note-card-actions">
+          <button class="card-action-btn" onclick="event.stopPropagation();shareNote('${note.id}')">share</button>
+          <button class="card-action-btn del" onclick="event.stopPropagation();askDelete('${note.id}')">delete</button>
+        </div>
+      </div>`;
+    card.addEventListener('click', () => openEditor(note.id));
+    grid.appendChild(card);
+  });
+}
+
+window.filterNotes = renderNotes;
+window.setFilter = (f, btn) => {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderNotes();
+};
+
+// ── Editor ──
+window.openTypePicker = () => openModal('typePickerModal');
+
+window.createNote = async (type) => {
+  closeModal('typePickerModal');
+  const docRef = await addDoc(notesRef(), {
+    type, title: '', body: '', items: [],
+    createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+  });
+  openEditor(docRef.id);
+};
+
+window.openEditor = (id) => {
+  currentNote = notes.find(n=>n.id===id) || { id, type:'note', title:'', body:'', items:[] };
+  renderEditor();
+  showScreen('editorScreen');
+};
+
+function renderEditor() {
+  const n = currentNote;
+  document.getElementById('editorTitle').value = n.title || '';
+  autoResize(document.getElementById('editorTitle'));
+
+  const badge = document.getElementById('editorTypeBadge');
+  badge.className = `editor-type-badge ${n.type}`;
+  badge.textContent = n.type === 'list' ? '✅ List' : '📝 Note';
+
+  document.getElementById('saveStatus').textContent = '';
+
+  const content = document.getElementById('editorContent');
+  if (n.type === 'note') {
+    content.innerHTML = `<textarea class="editor-textarea" id="noteBody"
+      placeholder="Start writing...">${escHtml(n.body||'')}</textarea>`;
+    document.getElementById('noteBody').addEventListener('input', scheduleSave);
+  } else {
+    renderListEditor();
+  }
+  document.getElementById('editorTitle').addEventListener('input', scheduleSave);
+}
+
+function renderListEditor() {
+  const content = document.getElementById('editorContent');
+  const items = currentNote.items || [];
+  content.innerHTML = '';
+
+  const listEl = document.createElement('div');
+  listEl.className = 'list-editor';
+  listEl.id = 'listEditor';
+
+  items.forEach((item, idx) => {
+    listEl.appendChild(buildItemRow(item, idx));
+  });
+
+  // Add item input
+  const addRow = document.createElement('div');
+  addRow.className = 'add-list-item';
+  addRow.innerHTML = `<span class="plus">+</span>
+    <input type="text" placeholder="add item..." id="newItemInput"/>`;
+  const inp = addRow.querySelector('input');
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && inp.value.trim()) {
+      currentNote.items = currentNote.items || [];
+      currentNote.items.push({ text: inp.value.trim(), checked: false });
+      inp.value = '';
+      renderListEditor();
+      scheduleSave();
+    }
+  });
+  addRow.addEventListener('click', () => inp.focus());
+  listEl.appendChild(addRow);
+  content.appendChild(listEl);
+}
+
+function buildItemRow(item, idx) {
+  const row = document.createElement('div');
+  row.className = `list-item-row${item.checked?' is-checked':''}`;
+
+  const cbWrap = document.createElement('label');
+  cbWrap.className = 'cb-wrap';
+  const cb = document.createElement('input');
+  cb.type = 'checkbox';
+  cb.checked = item.checked;
+  const box = document.createElement('span');
+  box.className = 'cb-box';
+  box.innerHTML = `<svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+    <path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
+  cb.addEventListener('change', () => {
+    item.checked = cb.checked;
+    row.classList.toggle('is-checked', item.checked);
+    textarea.classList.toggle('struck', item.checked);
+    scheduleSave();
+  });
+  cbWrap.append(cb, box);
+
+  const textarea = document.createElement('textarea');
+  textarea.className = `list-item-text${item.checked?' struck':''}`;
+  textarea.value = item.text;
+  textarea.rows = 1;
+  textarea.placeholder = 'item...';
+  textarea.addEventListener('input', () => {
+    item.text = textarea.value;
+    autoResize(textarea);
+    scheduleSave();
+  });
+  autoResize(textarea);
+
+  const delBtn = document.createElement('button');
+  delBtn.className = 'btn-del-item';
+  delBtn.innerHTML = '×';
+  delBtn.addEventListener('click', () => {
+    currentNote.items.splice(idx, 1);
+    renderListEditor();
+    scheduleSave();
+  });
+
+  row.append(cbWrap, textarea, delBtn);
+  return row;
+}
+
+// ── Save ──
+function scheduleSave() {
+  document.getElementById('saveStatus').textContent = 'unsaved...';
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(saveNote, 1500);
+}
+
+window.saveNote = async () => {
+  if (!currentNote || !currentUser) return;
+  clearTimeout(autoSaveTimer);
+  const title = document.getElementById('editorTitle').value;
+  let body = '';
+  if (currentNote.type === 'note') {
+    body = document.getElementById('noteBody')?.value || '';
+  }
+  const data = {
+    title, body,
+    items: currentNote.items || [],
+    updatedAt: serverTimestamp()
+  };
+  try {
+    await updateDoc(doc(db, 'users', currentUser.uid, 'notes', currentNote.id), data);
+    currentNote = { ...currentNote, ...data, title, body };
+    document.getElementById('saveStatus').textContent = 'saved ✓';
+    setTimeout(()=>{ document.getElementById('saveStatus').textContent=''; }, 2000);
+  } catch(e) {
+    showToast('Error saving note');
+  }
+};
+
+window.goBack = async () => {
+  await saveNote();
+  showScreen('dashScreen');
+};
+
+// ── Delete ──
+window.askDelete = (id) => {
+  deleteTargetId = id;
+  openModal('deleteModal');
+};
+window.confirmDelete = async () => {
+  if (!deleteTargetId || !currentUser) return;
+  try {
+    await deleteDoc(doc(db, 'users', currentUser.uid, 'notes', deleteTargetId));
+    closeModal('deleteModal');
+    showToast('Note deleted');
+    if (document.getElementById('editorScreen').classList.contains('active')) {
+      showScreen('dashScreen');
+    }
+  } catch(e) {
+    showToast('Error deleting note');
+  }
+  deleteTargetId = null;
+};
+
+// ── Share ──
+window.shareNote = (id) => {
+  const n = notes.find(n=>n.id===id);
+  if (n) { currentNote = n; openModal('shareModal'); }
+};
+window.openShareModal = () => openModal('shareModal');
+
+window.shareVia = (method) => {
+  const n = currentNote;
+  if (!n) return;
+  const title = n.title || 'Untitled';
+  let text = `*${title}*\n\n`;
+  if (n.type === 'list') {
+    text += (n.items||[]).map(i=>`${i.checked?'✅':'⬜'} ${i.text}`).join('\n');
+  } else {
+    text += n.body || '';
+  }
+  closeModal('shareModal');
+  if (method === 'whatsapp') {
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  } else if (method === 'gmail') {
+    window.open(`mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(text)}`, '_blank');
+  } else if (method === 'copy') {
+    navigator.clipboard.writeText(text).then(()=>showToast('Copied to clipboard ✓'));
+  } else if (method === 'native') {
+    if (navigator.share) {
+      navigator.share({ title, text }).catch(()=>{});
+    } else {
+      navigator.clipboard.writeText(text).then(()=>showToast('Copied to clipboard ✓'));
+    }
+  }
+};
+
+// ── Modals ──
+window.openModal = (id) => document.getElementById(id).classList.add('open');
+window.closeModal = (id) => document.getElementById(id).classList.remove('open');
+
+// ── Toast ──
+window.showToast = (msg) => {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+};
+
+// ── Helpers ──
+window.autoResize = (el) => {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+};
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function fmtDate(d) {
+  const now = new Date();
+  const diff = (now - d) / 1000;
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+  if (diff < 604800) return Math.floor(diff/86400) + 'd ago';
+  return d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+}
+
+// Close modals on Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.open')
+      .forEach(m => m.classList.remove('open'));
+  }
+});
+</script>
+</body>
+</html>
