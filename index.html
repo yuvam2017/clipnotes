@@ -284,7 +284,7 @@ input,textarea,button{font-family:inherit;}
   font-family:'Instrument Serif',serif;font-size:2.2rem;
   color:var(--ink);background:transparent;border:none;outline:none;
   width:100%;margin-bottom:24px;line-height:1.2;letter-spacing:-0.5px;
-  resize:none;
+  resize:none;min-height:52px;display:block;overflow:hidden;
 }
 .editor-title::placeholder{color:var(--muted);}
 
@@ -564,8 +564,7 @@ input,textarea,button{font-family:inherit;}
     </div>
   </div>
   <div class="editor-body">
-    <textarea class="editor-title" id="editorTitle" placeholder="Title" rows="1"
-      oninput="autoResize(this)"></textarea>
+    <textarea class="editor-title" id="editorTitle" placeholder="Title"></textarea>
     <div id="editorContent"></div>
   </div>
 </div>
@@ -752,12 +751,11 @@ function friendlyError(code) {
 // ── User Avatar ──
 function renderUserAvatar() {
   const av = document.getElementById('userAvatar');
-  if (currentUser.photoURL) {
-    av.innerHTML = `<img src="${currentUser.photoURL}" alt="avatar"/>`;
-  } else {
-    const initial = (currentUser.displayName || currentUser.email || 'U')[0].toUpperCase();
-    av.textContent = initial;
-  }
+  // Always use first letter — works for both Google and Email users
+  const initial = (currentUser.displayName || currentUser.email || 'U')[0].toUpperCase();
+  av.textContent = initial;
+  av.style.background = 'var(--accent)';
+  av.style.color = '#0e0e0f';
 }
 
 // ── Firestore Notes ──
@@ -869,24 +867,41 @@ window.openEditor = (id) => {
 
 function renderEditor() {
   const n = currentNote;
-  document.getElementById('editorTitle').value = n.title || '';
-  autoResize(document.getElementById('editorTitle'));
+
+  // Set title value and resize — always visible
+  const titleEl = document.getElementById('editorTitle');
+  titleEl.value = n.title || '';
+  // Use setTimeout so DOM has painted before measuring height
+  setTimeout(() => autoResize(titleEl), 0);
+
+  // Re-attach input listener cleanly
+  titleEl.oninput = () => { autoResize(titleEl); scheduleSave(); };
 
   const badge = document.getElementById('editorTypeBadge');
-  badge.className = `editor-type-badge ${n.type}`;
+  badge.className = 'editor-type-badge ' + n.type;
   badge.textContent = n.type === 'list' ? '✅ List' : '📝 Note';
 
   document.getElementById('saveStatus').textContent = '';
 
   const content = document.getElementById('editorContent');
   if (n.type === 'note') {
-    content.innerHTML = `<textarea class="editor-textarea" id="noteBody"
-      placeholder="Start writing...">${escHtml(n.body||'')}</textarea>`;
-    document.getElementById('noteBody').addEventListener('input', scheduleSave);
+    content.innerHTML = '<textarea class="editor-textarea" id="noteBody" placeholder="Start writing..."></textarea>';
+    const bodyEl = document.getElementById('noteBody');
+    bodyEl.value = n.body || '';
+    bodyEl.oninput = scheduleSave;
   } else {
     renderListEditor();
   }
-  document.getElementById('editorTitle').addEventListener('input', scheduleSave);
+
+  // Auto-focus title if new note, otherwise focus body
+  setTimeout(() => {
+    if (!n.title) {
+      titleEl.focus();
+    } else if (n.type === 'note') {
+      const bodyEl = document.getElementById('noteBody');
+      if (bodyEl) { bodyEl.focus(); bodyEl.setSelectionRange(bodyEl.value.length, bodyEl.value.length); }
+    }
+  }, 40);
 }
 
 function renderListEditor() {
@@ -909,12 +924,20 @@ function renderListEditor() {
     <input type="text" placeholder="add item..." id="newItemInput"/>`;
   const inp = addRow.querySelector('input');
   inp.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && inp.value.trim()) {
-      currentNote.items = currentNote.items || [];
-      currentNote.items.push({ text: inp.value.trim(), checked: false });
-      inp.value = '';
-      renderListEditor();
-      scheduleSave();
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (inp.value.trim()) {
+        currentNote.items = currentNote.items || [];
+        currentNote.items.push({ text: inp.value.trim(), checked: false });
+        inp.value = '';
+        renderListEditor();
+        scheduleSave();
+        // FIX: re-focus the new input after re-render
+        setTimeout(() => {
+          const newInp = document.getElementById('newItemInput');
+          if (newInp) newInp.focus();
+        }, 20);
+      }
     }
   });
   addRow.addEventListener('click', () => inp.focus());
@@ -979,7 +1002,7 @@ function scheduleSave() {
 window.saveNote = async () => {
   if (!currentNote || !currentUser) return;
   clearTimeout(autoSaveTimer);
-  const title = document.getElementById('editorTitle').value;
+  const title = (document.getElementById('editorTitle').value || '').trim();
   let body = '';
   if (currentNote.type === 'note') {
     body = document.getElementById('noteBody')?.value || '';
