@@ -324,8 +324,12 @@ input,textarea,button{font-family:inherit;}
 .list-item-text{
   flex:1;background:transparent;border:none;outline:none;
   color:var(--ink);font-size:0.9rem;line-height:1.6;
-  font-family:'Geist Mono',monospace;resize:none;
+  font-family:'Geist Mono',monospace;
   min-height:24px;padding-top:1px;
+  resize:none;
+  -webkit-appearance:none;
+  appearance:none;
+  overflow:hidden;
 }
 .list-item-text::placeholder{color:var(--muted);}
 .list-item-text.struck{text-decoration:line-through;color:var(--muted);}
